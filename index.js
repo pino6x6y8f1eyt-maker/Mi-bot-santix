@@ -45,7 +45,7 @@ client.once('ready', async () => {
 
   // PONER EL PUNTO ROJO DND
   client.user.setPresence({
-    activities: [{ name: 'imitando a mi papá 😎', type: 0 }],
+    activities: [{ name: '🥰🥰 Amo a mi papa el santix 🥰🥰 no me pagan ): 💵💵', type: 0 }],
     status: 'dnd'
   });
 });
@@ -63,7 +63,7 @@ client.on('interactionCreate', async interaction => {
       await interaction.reply({ content: `Ya mandé tu mensaje a ${canal} pa 👑`, ephemeral: true });
     } catch (error) {
       console.error(error);
-      await interaction.reply({ content: 'No pude mandar eso, no tengo permisos en ese canal 💀', ephemeral: true });
+      await interaction.reply({ content: 'No pude mandar mensaje weon x_x no me distes permisos papa', ephemeral: true });
     }
   }
 });
