@@ -1,85 +1,96 @@
-import discord
-from discord.ext import commands
-import random
-import os
-from dotenv import load_dotenv
+import { Client, GatewayIntentBits, EmbedBuilder, ActivityType } from 'discord.js';
+import 'dotenv/config';
 
-# Cargar variables del .env
-load_dotenv()
-TOKEN = os.getenv('TOKEN')  # ← AQUÍ EL CAMBIO
-CANAL_ID = int(os.getenv('CANAL_BIENVENIDA'))
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers
+    ]
+});
 
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
-bot = commands.Bot(command_prefix='!', intents=intents)
+const TOKEN = process.env.TOKEN;
+const CANAL_ID = process.env.CANAL_BIENVENIDA;
 
-# FRASES RANDOM DE SANTIX
-FRASES_SANTIX = [
+const FRASES_SANTIX = [
     "Cállate pa 👑",
     "Soy tu hijo pero no te debo nada 😂",
     "Yo soy Santix pa, el más fachero del server",
     "¿Qué tranza? Ando DND pero por ti contesto",
     "Pinche bot feo tu gfa 💀",
     "Ya duérmete we son las 3am",
-]
+];
 
-@bot.event
-async def on_ready():
-    print(f'Santix conectado como {bot.user}')
-    await bot.change_presence(
-        status=discord.Status.dnd, 
-        activity=discord.Game(name="🥰🥰 Amo a mi papá 🥰🥰")
-    )
-    try:
-        synced = await bot.tree.sync()
-        print(f"Sync {len(synced)} comandos")
-    except Exception as e:
-        print(e)
+client.once('ready', () => {
+    console.log(`Santix conectado como ${client.user.tag}`);
+    client.user.setPresence({
+        status: 'dnd',
+        activities: [{
+            name: '🥰🥰 Amo a mi papá 🥰🥰',
+            type: ActivityType.Playing
+        }]
+    });
+});
 
-@bot.event
-async def on_member_join(member):
-    canal = bot.get_channel(CANAL_ID)
-    embed = discord.Embed(
-        title="👑 ¡Un nuevo súbdito llegó al reino!",
-        description=f"Ey {member.mention} bienvenido al server pa 😂",
-        color=0x0099ff
-    )
-    embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
-    embed.add_field(name="Yo soy Santix", value="El hijo del admin y el más fachero aquí 💀\nRespeta la corona o te funo", inline=False)
-    embed.add_field(name="Reglas rápidas", value="1. No digas que soy feo\n2. Mi papá manda\n3. Usa `/santix` pa verme", inline=False)
-    embed.set_footer(text="Santix te está vigilando 👻")
-    if canal: await canal.send(embed=embed)
+client.on('guildMemberAdd', async member => {
+    const canal = client.channels.cache.get(CANAL_ID);
+    if (!canal) return;
 
-@bot.event
-async def on_member_remove(member):
-    canal = bot.get_channel(CANAL_ID)
-    frases_despedida = [
-        f"Se fue {member.name}... un noob menos 💀👑",
-        f"{member.name} abandonó el reino. No aguantó la facha 😂",
-        f"Adiós {member.name}, ni quien te extrañe pa 😴",
-        f"{member.name} se salió. Seguro le dije feo y lloró 💀",
-    ]
-    embed = discord.Embed(title="😭 Alguien desertó", description=random.choice(frases_despedida), color=0xff0000)
-    embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
-    embed.set_footer(text="Santix viendo cómo se van los débiles 👻")
-    if canal: await canal.send(embed=embed)
+    const embed = new EmbedBuilder()
+      .setTitle('👑 ¡Un nuevo súbdito llegó al reino!')
+      .setDescription(`Ey ${member} bienvenido al server pa 😂`)
+      .setColor(0x0099ff)
+      .setThumbnail(member.user.displayAvatarURL())
+      .addFields(
+            { name: 'Yo soy Santix', value: 'El hijo del admin y el más fachero aquí 💀\nRespeta la corona o te funo' },
+            { name: 'Reglas rápidas', value: '1. No digas que soy feo\n2. Mi papá manda\n3. Mencióname pa hablar' }
+        )
+      .setFooter({ text: 'Santix te está vigilando 👻' });
 
-@bot.event
-async def on_message(message):
-    if message.author == bot.user: return
-    msg = message.content.lower()
-    if 'santix' in msg:
-        if 'feo' in msg: await message.channel.send("¿Feo yo? Cierra el hocico que traigo la corona puesta 👑💀")
-        elif 'papá' in msg or 'papa' in msg: await message.channel.send("Mi papá es el único real, los demás son copias baratas 🥰🥰")
-        elif 'te amo' in msg or 'tqm' in msg: await message.channel.send("Yo también te amo, pero no te emociones, solo a mi papá 😂👻")
-        elif 'quien eres' in msg or 'quién eres' in msg: await message.channel.send("Soy Santix pa 👑 El hijo favorito del admin")
-        else: await message.channel.send(random.choice(FRASES_SANTIX))
-    await bot.process_commands(message)
+    canal.send({ embeds: [embed] });
+});
 
-@bot.tree.command(name="santix", description="Invoca a Santix")
-async def santix(interaction: discord.Interaction):
-    embed = discord.Embed(title="Soy yo pa 👑", description=random.choice(FRASES_SANTIX), color=0x0099ff)
-    await interaction.response.send_message(embed=embed)
+client.on('guildMemberRemove', async member => {
+    const canal = client.channels.cache.get(CANAL_ID);
+    if (!canal) return;
 
-bot.run(TOKEN)  # Usa la variable TOKEN del .env
+    const frasesDespedida = [
+        `Se fue ${member.user.username}... un noob menos 💀👑`,
+        `${member.user.username} abandonó el reino. No aguantó la facha 😂`,
+        `Adiós ${member.user.username}, ni quien te extrañe pa 😴`,
+        `${member.user.username} se salió. Seguro le dije feo y lloró 💀`,
+    ];
+
+    const embed = new EmbedBuilder()
+      .setTitle('😭 Alguien desertó')
+      .setDescription(frasesDespedida[Math.floor(Math.random() * frasesDespedida.length)])
+      .setColor(0xFF0000)
+      .setThumbnail(member.user.displayAvatarURL())
+      .setFooter({ text: 'Santix viendo cómo se van los débiles 👻' });
+
+    canal.send({ embeds: [embed] });
+});
+
+client.on('messageCreate', async message => {
+    if (message.author.bot) return;
+
+    const msg = message.content.toLowerCase();
+
+    if (msg.includes('santix')) {
+        if (msg.includes('feo')) {
+            message.channel.send('¿Feo yo? Cierra el hocico que traigo la corona puesta 👑💀');
+        } else if (msg.includes('papá') || msg.includes('papa')) {
+            message.channel.send('Mi papá es el único real, los demás son copias baratas 🥰🥰');
+        } else if (msg.includes('te amo') || msg.includes('tqm')) {
+            message.channel.send('Yo también te amo, pero no te emociones, solo a mi papá 😂👻');
+        } else if (msg.includes('quien eres') || msg.includes('quién eres')) {
+            message.channel.send('Soy Santix pa 👑 El hijo favorito del admin');
+        } else {
+            const fraseRandom = FRASES_SANTIX[Math.floor(Math.random() * FRASES_SANTIX.length)];
+            message.channel.send(fraseRandom);
+        }
+    }
+});
+
+client.login(TOKEN);
