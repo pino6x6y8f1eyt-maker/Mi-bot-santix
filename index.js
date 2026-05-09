@@ -10,65 +10,82 @@ const client = new Client({
 });
 
 const TOKEN = process.env.TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID; // ← Necesitas agregar esto en Railway
+const CLIENT_ID = process.env.CLIENT_ID;
 
 // REGISTRAR COMANDOS SLASH
 const commands = [
   new SlashCommandBuilder()
-    .setName('mensaje')
-    .setDescription('Manda un mensaje 👑')
-    .addStringOption(option =>
+  .setName('mensaje')
+  .setDescription('Manda un mensaje 👑')
+  .addStringOption(option =>
       option.setName('texto')
-        .setDescription('Qué quieres que diga Santix')
-        .setRequired(true))
-    .addChannelOption(option =>
+      .setDescription('Qué quieres que diga Santix')
+      .setRequired(true))
+  .addChannelOption(option =>
       option.setName('canal')
-        .setDescription('A qué canal lo mando')
-        .addChannelTypes(ChannelType.GuildText)
-        .setRequired(true))
-    .toJSON(),
+      .setDescription('A qué canal lo mando')
+      .addChannelTypes(ChannelType.GuildText)
+      .setRequired(true))
+  .toJSON(),
 
-  // COMANDO NUEVO: /anuncio
   new SlashCommandBuilder()
-    .setName('anuncio')
-    .setDescription('Manda un anuncio oficial 📢')
-    .addStringOption(option =>
+  .setName('anuncio')
+  .setDescription('Manda un anuncio oficial 📢')
+  .addStringOption(option =>
       option.setName('texto')
-        .setDescription('Qué dice el anuncio')
-        .setRequired(true))
-    .addChannelOption(option =>
+      .setDescription('Qué dice el anuncio')
+      .setRequired(true))
+  .addChannelOption(option =>
       option.setName('canal')
-        .setDescription('A qué canal lo mando')
-        .addChannelTypes(ChannelType.GuildText)
-        .setRequired(true))
-    .addStringOption(option =>
+      .setDescription('A qué canal lo mando')
+      .addChannelTypes(ChannelType.GuildText)
+      .setRequired(true))
+  .addStringOption(option =>
       option.setName('mencion')
-        .setDescription('Mencionar a todos?')
-        .addChoices(
+      .setDescription('Mencionar a todos?')
+      .addChoices(
           { name: '@everyone', value: 'everyone' },
           { name: '@here', value: 'here' },
           { name: 'Sin mención', value: 'none' }
         )
-        .setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator) // SOLO ADMINS
-    .toJSON()
+      .setRequired(false))
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .toJSON(),
+
+  // COMANDO /live FUSIONADO
+  new SlashCommandBuilder()
+  .setName('live')
+  .setDescription('Anuncia que estás en vivo en TikTok 🔴')
+  .addStringOption(option =>
+      option.setName('titulo')
+      .setDescription('El título o tema de tu live')
+      .setRequired(false))
+  .addStringOption(option =>
+      option.setName('usuario')
+      .setDescription('Tu usuario de TikTok sin el @')
+      .setRequired(false))
+  .addChannelOption(option =>
+      option.setName('canal')
+      .setDescription('Canal donde avisar. Si no pones nada busca #🎮〢lives')
+      .addChannelTypes(ChannelType.GuildText)
+      .setRequired(false))
+  .setDefaultMemberPermissions(PermissionFlagsBits.MentionEveryone)
+  .toJSON()
 ];
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 client.once('ready', async () => {
-  console.log(`Bot online! Logueado como ${client.user.tag}`);
+  console.log(`✅ | ¡${client.user.username} en línea!`);
 
-  // REGISTRAR SLASH COMMANDS
   try {
     console.log('Registrando comandos slash...');
     await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-    console.log('Comandos /mensaje y /anuncio registrados pa 👑');
+    console.log(`✅ | ${commands.length} comando(s) registrado(s): /mensaje, /anuncio, /live`);
   } catch (error) {
-    console.error('Error registrando comandos:', error);
+    console.error('❌ Error registrando comandos:', error);
   }
 
-  // PONER EL PUNTO ROJO DND
   client.user.setPresence({
     activities: [{ name: '🥰🥰 Amo a mi papa el santix 🥰🥰 no me pagan ): 💵💵', type: 0 }],
     status: 'dnd'
@@ -93,19 +110,18 @@ client.on('interactionCreate', async interaction => {
     }
   }
 
-  // COMANDO /anuncio NUEVO
+  // COMANDO /anuncio
   if (interaction.commandName === 'anuncio') {
     const texto = interaction.options.getString('texto');
     const canal = interaction.options.getChannel('canal');
     const mencion = interaction.options.getString('mencion') || 'none';
 
-    // Embed perrón pa que se vea oficial
     const embed = new EmbedBuilder()
-      .setTitle('📢 ANUNCIO OFICIAL DE LOS PANITAS GAMER')
-      .setDescription(texto)
-      .setColor(0xFF0000) // Rojo sangre tryhard
-      .setFooter({ text: `Anuncio de ${interaction.user.username}`, iconURL: interaction.user.displayAvatarURL() })
-      .setTimestamp();
+    .setTitle('📢 ANUNCIO OFICIAL DE LOS PANITAS GAMER')
+    .setDescription(texto)
+    .setColor(0xFF0000)
+    .setFooter({ text: `Anuncio de ${interaction.user.username}`, iconURL: interaction.user.displayAvatarURL() })
+    .setTimestamp();
 
     let contenidoMencion = '';
     if (mencion === 'everyone') contenidoMencion = '@everyone';
@@ -114,10 +130,53 @@ client.on('interactionCreate', async interaction => {
     try {
       await canal.send({ content: contenidoMencion, embeds: [embed] });
       await interaction.reply({ content: `Anuncio mandado a ${canal} pa 🔥`, ephemeral: true });
-      console.log(`[ANUNCIO] ${interaction.user.tag} mandó: ${texto}`);
     } catch (error) {
       console.error(error);
       await interaction.reply({ content: 'No pude mandar el anuncio we x_x checa mis permisos', ephemeral: true });
+    }
+  }
+
+  // COMANDO /live FUSIONADO
+  if (interaction.commandName === 'live') {
+    const titulo = interaction.options.getString('titulo') || '¡Estoy en vivo!';
+    const usuario = interaction.options.getString('usuario');
+    let canal = interaction.options.getChannel('canal');
+
+    // Si no eligió canal, busca el #🎮〢lives
+    if (!canal) {
+      canal = interaction.guild.channels.cache.find(c => c.name === '🎮〢lives');
+    }
+
+    if (!canal) {
+      return interaction.reply({
+        content: '❌ No encontré el canal **#🎮〢lives** y no elegiste otro. Crea el canal o selecciona uno we.',
+        ephemeral: true
+      });
+    }
+
+    const tiktokUrl = usuario
+     ? `https://www.tiktok.com/@${usuario.replace('@', '')}/live`
+      : null;
+
+    const embed = new EmbedBuilder()
+    .setTitle('🔴 ¡ESTOY EN VIVO EN TIKTOK!')
+    .setDescription(
+        `**${titulo}**\n\n` +
+        (tiktokUrl? `📲 Únete aquí: [Ver en TikTok](${tiktokUrl})\n\n` : '') +
+        `👤 Streamer: ${interaction.user}\n` +
+        `🕹️ ¡Ven a acompañarme en el live!`
+      )
+    .setColor(0xFE2C55)
+    .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
+    .setTimestamp();
+
+    try {
+      await canal.send({ content: '@everyone', embeds: [embed] });
+      await interaction.reply({ content: `✅ ¡Anuncio enviado en ${canal}!`, ephemeral: true });
+      console.log(`[LIVE] ${interaction.user.tag} avisó del TikTok`);
+    } catch (error) {
+      console.error(error);
+      await interaction.reply({ content: 'No pude avisar del live we x_x revisa permisos', ephemeral: true });
     }
   }
 });
@@ -131,6 +190,18 @@ client.on('messageCreate', message => {
 
   if (message.content === '!perreo') {
     message.channel.send('SIUUUU *perrea en silencio pa que no lo regañe su papá* 🔥👻');
+  }
+
+  // COMANDO SECRETO:!templo MC
+  if (message.content === '!templo MC') {
+    const embedMC = new EmbedBuilder()
+    .setTitle('⛏️ TEMPLO DEL SANTIX - SERVER MINECRAFT ⛏️')
+    .setDescription('**IP:** `pendiente.por.ahora`\n**Versión:** 1.20.1 Java\n**Modalidad:** Survival Tryhard\n\n*Pide la IP al Santix por MD pa* 👑')
+    .setColor(0x5B9E48)
+    .setThumbnail('https://cdn.discordapp.com/attachments/1104529476982083604/1152169286843482132/minecraft.png')
+    .setFooter({ text: 'Solo los panitas reales conocen el templo' });
+
+    message.channel.send({ embeds: [embedMC] });
   }
 
   if (message.content.includes('👻')) {
