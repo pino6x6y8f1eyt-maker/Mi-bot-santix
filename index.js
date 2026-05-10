@@ -87,7 +87,7 @@ client.once('ready', async () => {
   }
 
   client.user.setPresence({
-    activities: [{ name: '🥰🥰 Amo a mi papa el santix 🥰🥰 no me pagan ): 💵💵', type: 0 }],
+    activities: [{ name: '🥰🥰 odio los Femboys 🥰🥰', type: 0 }],
     status: 'dnd'
   });
 });
