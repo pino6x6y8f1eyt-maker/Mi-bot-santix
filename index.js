@@ -33,48 +33,7 @@ client.once('ready', async () => {
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand() && !interaction.isButton()) return;
 
-    // COMANDO /setup
-    if (interaction.commandName === 'setup') {
-        const embed = new EmbedBuilder()
-          .setTitle('**ayuda y soporte**')
-          .setDescription(`Te ayudaremos en dudas y en reportes a jugadores
-
-1.- **dudas** 
-Dudas sobre el servidor de discord
-
-2.- **Reportar jugadores**
-Razon de reporte 
-Su sancion es depende lo que iso
-
-3.- **alianza**
-Aliamos los servidores para ayudarnos
-
-4.- **vip**
-Puedes pedir soporte o invitar a amigos a la zona vip`)
-          .setColor('#5865F2')
-          .setFooter({ text: 'Los Panas Gamers | Sistema de Tickets' });
-
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('ticket_dudas').setLabel('Dudas').setEmoji('❓').setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder().setCustomId('ticket_reporte').setLabel('reportar usuario').setEmoji('🚨').setStyle(ButtonStyle.Danger),
-            new ButtonBuilder().setCustomId('ticket_alianza').setLabel('alianza').setEmoji('🤝').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId('ticket_vip').setLabel('vip').setEmoji('👑').setStyle(ButtonStyle.Primary)
-        );
-
-        await interaction.reply({ embeds: [embed], components: [row] });
-    }
-
-    // CLICK EN BOTONES
-    if (interaction.isButton() && interaction.customId.startsWith('ticket_')) {
-        await interaction.reply({ 
-            content: `Abriste ticket de **${interaction.customId.replace('ticket_', '')}** ✅ El staff te atiende pronto.`, 
-            ephemeral: true 
-        });
-        // Aquí después le metes la lógica pa crear el canal si quieres
-    }
-});
-
-// REGISTRAR COMANDOS SLASH
+ // REGISTRAR COMANDOS SLASH
 const commands = [
   new SlashCommandBuilder()
   .setName('mensaje')
@@ -113,26 +72,6 @@ const commands = [
       .setRequired(false))
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .toJSON(),
-
-  // COMANDO /live FUSIONADO
-  new SlashCommandBuilder()
-  .setName('live')
-  .setDescription('Anuncia que estás en vivo en TikTok 🔴')
-  .addStringOption(option =>
-      option.setName('titulo')
-      .setDescription('El título o tema de tu live')
-      .setRequired(false))
-  .addStringOption(option =>
-      option.setName('usuario')
-      .setDescription('Tu usuario de TikTok sin el @')
-      .setRequired(false))
-  .addChannelOption(option =>
-      option.setName('canal')
-      .setDescription('Canal donde avisar. Si no pones nada busca #🎮〢lives')
-      .addChannelTypes(ChannelType.GuildText)
-      .setRequired(false))
-  .setDefaultMemberPermissions(PermissionFlagsBits.MentionEveryone)
-  .toJSON()
 ];
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
