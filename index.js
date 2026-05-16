@@ -12,16 +12,6 @@ const client = new Client({
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 
-//tikets xd
-
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, REST, Routes } = require('discord.js');
-require('dotenv').config();
-
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-
-const commands = [{
-    name: 'setup',
-    description: 'Crea el panel de tickets de Los Panas Gamers'
 }];
 
 client.once('ready', async () => {
