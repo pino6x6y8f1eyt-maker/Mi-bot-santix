@@ -13,8 +13,8 @@ const client = new Client({
 
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
-const GUILD_ID = '1469534530074574996'; // Tu server ID
-const VOICE_CHANNEL_ID = '1469547698679058564'; // Canal donde se queda 24/7
+const GUILD_ID = '1409618714386497538'; // Tu server ID
+const VOICE_CHANNEL_ID = '1419857650132320256'; // Canal donde se queda 24/7
 
 let voiceConnection; // Guardamos la conexión
 
