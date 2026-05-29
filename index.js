@@ -45,7 +45,6 @@ const commands = [
       option.setName('canal')
     .setDescription('A qué canal lo mando')
     .addChannelTypes(ChannelType.GuildText)
-    .setRequired(true))
 .addStringOption(option =>
       option.setName('mencion')
     .setDescription('Mencionar a todos?')
